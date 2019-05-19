@@ -12,83 +12,83 @@ const util = require('util');
 const PIECES_FILL = [
   [
     [0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0], [0, 2, 0], [1, 2, 0],
-    // [0, 0, 1],
-    // [0, 0, 2],
-    // [0, 0, 3],
-    // [0, 0, 4],
-    // [0, 0, 5],
+    [0, 0, 1],
+    [0, 0, 2],
+    [0, 0, 3],
+    [0, 0, 4],
+    [0, 0, 5],
     [0, 0, 6], [1, 0, 6], [0, 1, 6], [1, 1, 6], [0, 2, 6], [1, 2, 6],
   ],
   [
     [0, 0, 0], [0, 1, 0], [1, 0, 0], [1, 1, 0], [2, 0, 0], [2, 1, 0],
-    // [2, 0, 1],
-    // [2, 0, 2],
-    // [2, 0, 3],
-    // [2, 0, 4],
-    // [2, 0, 5],
+    [2, 0, 1],
+    [2, 0, 2],
+    [2, 0, 3],
+    [2, 0, 4],
+    [2, 0, 5],
     [0, 0, 6], [0, 1, 6], [1, 0, 6], [1, 1, 6], [2, 0, 6], [2, 1, 6],
   ],
   [
     [0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0], [0, 2, 0], [1, 2, 0],
-    // [0, 1, 1], [0, 2, 1],
-    // [0, 1, 2],
-    // [0, 1, 3], [0, 2, 3],
-    // [0, 2, 4],
-    // [0, 2, 5],
+    [0, 1, 1], [0, 2, 1],
+    [0, 1, 2],
+    [0, 1, 3], [0, 2, 3],
+    [0, 2, 4],
+    [0, 2, 5],
     [0, 0, 6], [1, 0, 6], [0, 1, 6], [1, 1, 6], [0, 2, 6], [1, 2, 6],
   ],
   [
     [0, 0, 0], [0, 1, 0], [1, 0, 0], [1, 1, 0], [2, 0, 0], [2, 1, 0],
-    // [0, 1, 1],
-    // [0, 1, 2], [1, 1, 2], [2, 1, 2],
-    // [2, 1, 3],
-    // [2, 1, 4],
-    // [1, 1, 5], [2, 1, 5],
+    [0, 1, 1],
+    [0, 1, 2], [1, 1, 2], [2, 1, 2],
+    [2, 1, 3],
+    [2, 1, 4],
+    [1, 1, 5], [2, 1, 5],
     [0, 0, 6], [0, 1, 6], [1, 0, 6], [1, 1, 6], [2, 0, 6], [2, 1, 6],
   ],
   [
     [0, 0, 0], [0, 1, 0], [0, 0, 1], [0, 1, 1], [0, 0, 2], [0, 1, 2],
-    // [1, 0, 0], [1, 0, 2], [1, 1, 2],
-    // [2, 0, 2], [2, 1, 2],
-    // [3, 1, 2],
-    // [4, 1, 2],
-    // [5, 1, 2],
+    [1, 0, 0], [1, 0, 2], [1, 1, 2],
+    [2, 0, 2], [2, 1, 2],
+    [3, 1, 2],
+    [4, 1, 2],
+    [5, 1, 2],
     [6, 0, 0], [6, 1, 0], [6, 0, 1], [6, 1, 1], [6, 0, 2], [6, 1, 2],
   ],
   [
     [0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1], [0, 2, 0], [0, 2, 1],
-    // [1, 2, 1],
-    // [2, 2, 1], [2, 1, 1],
-    // [3, 2, 1], [3, 2, 0],
-    // [4, 2, 0],
-    // [5, 2, 0],
+    [1, 2, 1],
+    [2, 2, 1], [2, 1, 1],
+    [3, 2, 1], [3, 2, 0],
+    [4, 2, 0],
+    [5, 2, 0],
     [6, 0, 0], [6, 0, 1], [6, 1, 0], [6, 1, 1], [6, 2, 0], [6, 2, 1],
   ],
   [
     [0, 0, 0], [0, 1, 0], [0, 0, 1], [0, 1, 1], [0, 0, 2], [0, 1, 2],
-    // [1, 0, 0],
-    // [2, 0, 0],
-    // [3, 0, 0], [3, 0, 1], // PAS SÛR DU TOUT!!
-    // [4, 0, 0], [4, 0, 1], // PAS 100% SÛR!!
-    // [5, 0, 0], [5, 0, 1], // PAS 100% SÛR!!
+    [1, 0, 0],
+    [2, 0, 0],
+    [3, 0, 0], [3, 0, 1], // PAS SÛR DU TOUT!!
+    [4, 0, 0], [4, 0, 1], // PAS 100% SÛR!!
+    [5, 0, 0], [5, 0, 1], // PAS 100% SÛR!!
     [6, 0, 0], [6, 1, 0], [6, 0, 1], [6, 1, 1], [6, 0, 2], [6, 1, 2],
   ],
   [
     [0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1], [0, 2, 0], [0, 2, 1],
-    // [1, 0, 1],
-    // [2, 0, 1],
-    // [3, 0, 1],
-    // [4, 0, 1], [4, 0, 0],
-    // [5, 0, 1], [5, 0, 0],
+    [1, 0, 1],
+    [2, 0, 1],
+    [3, 0, 1],
+    [4, 0, 1], [4, 0, 0],
+    [5, 0, 1], [5, 0, 0],
     [6, 0, 0], [6, 0, 1], [6, 1, 0], [6, 1, 1], [6, 2, 0], [6, 2, 1],
   ],
   [
     [0, 0, 0], [1, 0, 0], [2, 0, 0], [0, 0, 1], [1, 0, 1], [2, 0, 1], [0, 0, 2], [1, 0, 2], [2, 0, 2],
-    // [0, 1, 1],
-    // [0, 2, 1],
-    // [0, 3, 1], [1, 3, 1],
-    // [1, 4, 1],
-    // [1, 5, 1],
+    [0, 1, 1],
+    [0, 2, 1],
+    [0, 3, 1], [1, 3, 1],
+    [1, 4, 1],
+    [1, 5, 1],
     [0, 6, 0], [1, 6, 0], [2, 6, 0], [0, 6, 1], [1, 6, 1], [2, 6, 1], [0, 6, 2], [1, 6, 2], [2, 6, 2],
   ],
 ];
@@ -96,35 +96,21 @@ const PIECES_FILL = [
 const PIECE_COUNT = PIECES_FILL.length;
 
 const INITIAL_STATE = [
-  [1, 3, 0],
-  [3, 4, 0],
-  [4, 1, 0],
-  [1, 1, 0],
+  [1, 2, -2],
+  [2, 3, -1],
+  [5, 2, -1],
+  [2, 1, -1],
 
-  [0, 4, 3],
+  [-2, 4, 2],
   [0, 3, 1],
   [0, 1, 1],
-  [0, 1, 4],
+  [-1, 1, 3],
 
   [2, 0, 2],
 ];
 
-// const TARGET_STATE = [
-//   [1, 3, 1],
-//   [3, 4, 0],
-//   [4, 1, 1],
-//   [1, 1, 0],
-
-//   [1, 4, 3],
-//   [0, 3, 1],
-//   [0, 1, 1],
-//   [0, 1, 4],
-
-//   [2, 0, 2],
-// ];
-
-const TARGET_STATE = [
-  [3, 3, -2],
+const SORTED_STATE = [
+  [1, 3, 0],
   [3, 4, 0],
   [4, 1, 0],
   [1, 1, 0],
@@ -140,15 +126,23 @@ const TARGET_STATE = [
 const graph = new Map();
 
 function main() {
-  const path = findPath(INITIAL_STATE, TARGET_STATE);
+  const {path, allMoves, found} = findPath(INITIAL_STATE, SORTED_STATE);
   if (path != null) {
+    console.log(found ? 'FOUND\n' : 'NOT found\n');
     for (const p of path) {
-      console.log(`${getActionName(p)} the ${getBlockName(p)} block on the ${getFaceName(p)} face.`);
+      console.log(getMoveDesc(p));
     }
   } else {
-    console.error('not found');
+    console.error('Not found, possible moves:\n');
+    for (const m of allMoves.get(getStateKey(INITIAL_STATE))) {
+      console.log(`  * ${getMoveDesc(m)}`);
+    }
     process.exitCode = 1;
   }
+}
+
+function getMoveDesc(p) {
+  return `${getActionName(p)} the ${getBlockName(p)} block on the ${getFaceName(p)} face.`;
 }
 
 function getActionName(p) {
@@ -159,7 +153,7 @@ function getActionName(p) {
     return p[3] > 0 ? 'Slide up' : 'Slide down';
   }
   if (p[2] === 2) {
-    return p[3] > 0 ? 'Push back' : 'Pull back';
+    return p[3] > 0 ? 'Push to the back' : 'Pull to the front';
   }
   throw new Error('unknown');
 }
@@ -200,7 +194,8 @@ function findPath(initState, targetState) {
   distances.set(key, 0);
   const queue = [initState];
 
-  let max = 100000000;
+  let max = 100000;
+  const allMoves = new Map();
 
   while (queue.length > 0 && max > 0) {
     const state = queue.shift();
@@ -208,15 +203,10 @@ function findPath(initState, targetState) {
     const dist = distances.get(key);
 
     if (key === targetKey) {
-      const path = [];
-      let p = prev.get(key);
-      while (p != null) {
-        path.push(p);
-        key = p[0];
-        p = prev.get(key);
-      }
-      return path.reverse();
+      return {path: getPath(prev, key), allMoves, found: true};
     }
+
+    const moves = [];
 
     for (let i = 0; i < PIECE_COUNT; ++i) {
       for (let j = 0; j < 3; ++j) {
@@ -230,6 +220,7 @@ function findPath(initState, targetState) {
           if (hasIntersection(newState)) {
             continue;
           }
+          moves.push([key, i, j, k]);
           const newKey = getStateKey(newState);
           const prevDist = distances.get(newKey);
           if (prevDist <= dist + 1) {
@@ -241,6 +232,7 @@ function findPath(initState, targetState) {
         }
       }
     }
+    allMoves.set(key, moves);
     --max;
   }
 
@@ -248,8 +240,20 @@ function findPath(initState, targetState) {
     console.error(`${max} tries left`);
   }
 
-  // console.error(distances);
-  return null;
+  const sd = [...distances];
+  sd.sort((a, b) => b[1] - a[1]);
+  return {path: getPath(prev, sd[0][0]), allMoves, found: false};
+}
+
+function getPath(prev, initKey) {
+  const path = [];
+  let p = prev.get(initKey);
+  while (p != null) {
+    path.push(p);
+    initKey = p[0];
+    p = prev.get(initKey);
+  }
+  return path.reverse();
 }
 
 function hasIntersection(state) {
