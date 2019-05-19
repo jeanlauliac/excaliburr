@@ -36,7 +36,8 @@ const PIECES_FILL = [
     [2, 1, 4],
     [1, 1, 5], [2, 1, 5],
     [0, 0, 6], [0, 1, 6], [1, 0, 6], [1, 1, 6], [2, 0, 6], [2, 1, 6],
-  ]
+  ],
+
 ];
 
 const PIECE_COUNT = PIECES_FILL.length;
@@ -53,6 +54,14 @@ const graph = new Map();
 function main() {
   const distances = new Map();
   const prev = new Map();
+
+  const initIntr = getIntersection(INITIAL_STATE);
+  if (initIntr.length > 0) {
+    console.error('invalid initial state: ', initIntr);
+    process.exitCode = 1;
+    return;
+  }
+
   let key = getStateKey(INITIAL_STATE);
 
   distances.set(key, 0);
