@@ -96,12 +96,12 @@ const PIECES_FILL = [
 const PIECE_COUNT = PIECES_FILL.length;
 
 const INITIAL_STATE = [
-  [1, 2, -2],
-  [2, 3, -1],
+  [1, 3, 0],
+  [2, 2, 1],
   [5, 2, -1],
-  [2, 1, -1],
+  [1, 1, 0],
 
-  [-2, 4, 2],
+  [1, 4, 3],
   [0, 3, 1],
   [0, 1, 1],
   [-1, 1, 3],
@@ -211,7 +211,7 @@ function findPath(initState, targetState) {
     for (let i = 0; i < PIECE_COUNT; ++i) {
       for (let j = 0; j < 3; ++j) {
         for (let k = -1; k < 2; k += 2) {
-          if (state[i][j] > 20 || state[i][j] < -20) {
+          if (state[i][j] > 100 || state[i][j] < -100) {
             continue;
           }
           const newState = [...state];
