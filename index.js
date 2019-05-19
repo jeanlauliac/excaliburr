@@ -39,25 +39,67 @@ const PIECES_FILL = [
   ]
 ];
 
-const INITIAL_STATE = {
-  pieces: [
-    [1, 3, 0],
-    [3, 4, 0],
-    [4, 1, 0],
-    [1, 1, 0],
-  ],
-};
+const PIECE_COUNT = PIECES_FILL.length;
+
+const INITIAL_STATE = [
+  [1, 3, 0],
+  [3, 4, 0],
+  [4, 1, 0],
+  [1, 1, 0],
+];
+
+const graph = new Map();
 
 function main() {
-  console.log(getIntersection(INITIAL_STATE));
+  const distances = new Map();
+  const prev = new Map();
+  let key = getStateKey(INITIAL_STATE);
+
+  distances.set(key, 0);
+  const queue = [INITIAL_STATE];
+
+  let max = 1000;
+
+  while (queue.length > 0 && max > 0) {
+    const state = queue.pop();
+    key = getStateKey(state);
+    const dist = distances.get(key);
+
+    for (let i = 0; i < PIECE_COUNT; ++i) {
+      for (let j = 0; j < 3; ++j) {
+        for (let k = -1; k < 2; k += 2) {
+          if (state[i][j] > 10 || state[i][j] < -10) {
+            continue;
+          }
+          const newState = [...state];
+          newState[i] = [...state[i]];
+          newState[i][j] += k;
+          if (getIntersection(newState).length > 0) {
+            continue;
+          }
+          const newKey = getStateKey(newState);
+          const prevDist = distances.get(newKey);
+          if (prevDist <= dist + 1) {
+            continue;
+          }
+          distances.set(newKey, dist + 1);
+          prev.set(newKey, key);
+          queue.push(newState);
+        }
+      }
+    }
+    --max;
+  }
+
+  console.log(distances);
 }
 
 function getIntersection(state) {
   const world = new Set();
   const result = [];
   addCube(world);
-  for (let i = 0; i < 4; ++i) {
-    const piecePos = state.pieces[i];
+  for (let i = 0; i < PIECE_COUNT; ++i) {
+    const piecePos = state[i];
     const fills = PIECES_FILL[i];
     for (let j = 0; j < fills.length; ++j) {
       const localPos = fills[j];
@@ -66,7 +108,7 @@ function getIntersection(state) {
         piecePos[1] + localPos[1],
         piecePos[2] + localPos[2],
       ];
-      const key = keyOf(pos);
+      const key = getPosKey(pos);
       if (world.has(key)) {
         result.push(pos);
       }
@@ -78,26 +120,30 @@ function getIntersection(state) {
 
 function addCube(world) {
   for (let x = 0; x <= 6; ++x) {
-    world.add(keyOf([x, 0, 0]));
-    world.add(keyOf([x, 6, 0]));
-    world.add(keyOf([x, 0, 6]));
-    world.add(keyOf([x, 6, 6]));
+    world.add(getPosKey([x, 0, 0]));
+    world.add(getPosKey([x, 6, 0]));
+    world.add(getPosKey([x, 0, 6]));
+    world.add(getPosKey([x, 6, 6]));
   }
   for (let y = 1; y <= 5; ++y) {
-    world.add(keyOf([0, y, 0]));
-    world.add(keyOf([6, y, 0]));
-    world.add(keyOf([0, y, 6]));
-    world.add(keyOf([6, y, 6]));
+    world.add(getPosKey([0, y, 0]));
+    world.add(getPosKey([6, y, 0]));
+    world.add(getPosKey([0, y, 6]));
+    world.add(getPosKey([6, y, 6]));
   }
   for (let z = 1; z <= 5; ++z) {
-    world.add(keyOf([0, 0, z]));
-    world.add(keyOf([6, 0, z]));
-    world.add(keyOf([0, 6, z]));
-    world.add(keyOf([6, 6, z]));
+    world.add(getPosKey([0, 0, z]));
+    world.add(getPosKey([6, 0, z]));
+    world.add(getPosKey([0, 6, z]));
+    world.add(getPosKey([6, 6, z]));
   }
 }
 
-function keyOf(position) {
+function getStateKey(state) {
+  return JSON.stringify(state);
+}
+
+function getPosKey(position) {
   return JSON.stringify(position);
 }
 
