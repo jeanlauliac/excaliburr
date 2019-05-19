@@ -185,6 +185,20 @@ function addCube(world) {
     world.add(getPosKey([0, 6, z]));
     world.add(getPosKey([6, 6, z]));
   }
+
+  for (let x = 1; x <= 5; ++x) {
+    world.add(getPosKey([x, 0, 1]));
+    world.add(getPosKey([x, 6, 1]));
+    world.add(getPosKey([x, 0, 5]));
+    world.add(getPosKey([x, 6, 5]));
+  }
+
+  for (let z = 2; z <= 4; ++z) {
+    world.add(getPosKey([1, 0, z]));
+    world.add(getPosKey([1, 6, z]));
+    world.add(getPosKey([5, 0, z]));
+    world.add(getPosKey([5, 6, z]));
+  }
 }
 
 function getStateKey(state) {
