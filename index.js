@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const util = require('util');
 
 // Pieces 0..3 are on front face, clockwise.
 // Pieces 4..7 are left, clockwise.
@@ -59,9 +60,9 @@ const PIECES_FILL = [
     [0, 0, 0], [0, 1, 0], [0, 0, 1], [0, 1, 1], [0, 0, 2], [0, 1, 2],
     [1, 0, 0],
     [2, 0, 0],
-    [3, 0, 0], [3, 0, 1], // PAS SÛR DU TOUT!!
-    [4, 0, 0], [4, 0, 1], // PAS 100% SÛR!!
-    [5, 0, 0], [5, 0, 1], // PAS 100% SÛR!!
+    // [3, 0, 0], [3, 0, 1], // PAS SÛR DU TOUT!!
+    // [4, 0, 0], [4, 0, 1], // PAS 100% SÛR!!
+    // [5, 0, 0], [5, 0, 1], // PAS 100% SÛR!!
     [6, 0, 0], [6, 1, 0], [6, 0, 1], [6, 1, 1], [6, 0, 2], [6, 1, 2],
   ],
   [
@@ -78,8 +79,8 @@ const PIECES_FILL = [
     [0, 1, 1],
     [0, 2, 1],
     [0, 3, 1], [1, 3, 1],
-    [1, 4, 1],
-    [1, 5, 1],
+    // [1, 4, 1],
+    // [1, 5, 1],
     [0, 6, 0], [1, 6, 0], [2, 6, 0], [0, 6, 1], [1, 6, 1], [2, 6, 1], [0, 6, 2], [1, 6, 2], [2, 6, 2],
   ],
 ];
@@ -91,42 +92,74 @@ const INITIAL_STATE = [
   [3, 4, 0],
   [4, 1, 0],
   [1, 1, 0],
+
   [0, 4, 3],
   [0, 3, 1],
   [0, 1, 1],
   [0, 1, 4],
+
+  [2, 0, 2],
+];
+
+const TARGET_STATE = [
+  [1, 3, -1],
+  [2, 3, 1],
+  [5, 2, -1],
+  [1, 1, 0],
+
+  [-2, 4, 2],
+  [0, 3, 1],
+  [0, 1, 1],
+  [-1, 1, 3],
+
   [2, 0, 2],
 ];
 
 const graph = new Map();
 
 function main() {
+  const path = findPath(TARGET_STATE, INITIAL_STATE);
+  if (path != null) {
+    console.log('found');
+  }
+  console.log()
+}
+
+function findPath(initState, targetState) {
+  let ntr = getIntersection(initState);
+  if (ntr.length > 0) {
+    throw new Error('invalid initial state: ', util.inspect(ntr));
+  }
+
+  ntr = getIntersection(targetState);
+  if (ntr.length > 0) {
+    throw new Error('invalid target state: ', util.inspect(ntr));
+  }
+
   const distances = new Map();
   const prev = new Map();
 
-  const initIntr = getIntersection(INITIAL_STATE);
-  if (initIntr.length > 0) {
-    console.error('invalid initial state: ', initIntr);
-    process.exitCode = 1;
-    return;
-  }
-
-  let key = getStateKey(INITIAL_STATE);
+  let key = getStateKey(initState);
+  const targetKey = getStateKey(targetState);
 
   distances.set(key, 0);
-  const queue = [INITIAL_STATE];
+  const queue = [initState];
 
-  let max = 10;
+  let max = 10000;
 
   while (queue.length > 0 && max > 0) {
-    const state = queue.pop();
+    const state = queue.shift();
     key = getStateKey(state);
     const dist = distances.get(key);
+
+    if (key === targetKey) {
+      return state;
+    }
 
     for (let i = 0; i < PIECE_COUNT; ++i) {
       for (let j = 0; j < 3; ++j) {
         for (let k = -1; k < 2; k += 2) {
-          if (state[i][j] > 10 || state[i][j] < -10) {
+          if (state[i][j] > 20 || state[i][j] < -20) {
             continue;
           }
           const newState = [...state];
@@ -149,7 +182,12 @@ function main() {
     --max;
   }
 
-  console.log(distances);
+  if (max > 0) {
+    console.error(`${max} tries left`);
+  }
+
+  // console.error(distances);
+  return null;
 }
 
 function getIntersection(state) {
