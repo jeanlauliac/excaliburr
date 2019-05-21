@@ -98,10 +98,10 @@ const PIECE_COUNT = PIECES_FILL.length;
 const INITIAL_STATE = [
   [1, 3, 0],
   [2, 2, 1],
-  [5, 2, -1],
+  [5, 3, -1],
   [1, 1, 0],
 
-  [1, 4, 3],
+  [-2, 4, 3],
   [0, 3, 1],
   [0, 1, 1],
   [-1, 1, 3],
@@ -129,8 +129,10 @@ function main() {
   const {path, allMoves, found} = findPath(INITIAL_STATE, SORTED_STATE);
   if (path != null) {
     console.log(found ? 'FOUND\n' : 'NOT found\n');
+    let i = 1;
     for (const p of path) {
-      console.log(getMoveDesc(p));
+      console.log(`${i}. ${getMoveDesc(p)}`);
+      ++i;
     }
   } else {
     console.error('Not found, possible moves:\n');
@@ -142,7 +144,11 @@ function main() {
 }
 
 function getMoveDesc(p) {
-  return `${getActionName(p)} the ${getBlockName(p)} block on the ${getFaceName(p)} face.`;
+  return `${getActionName(p)}: ${p[1].map(piece => getPieceName(piece)).join(', ')}`;
+}
+
+function getPieceName(piece) {
+  return `${getFaceName(piece)} ${getBlockName(piece)}`;
 }
 
 function getActionName(p) {
@@ -153,13 +159,13 @@ function getActionName(p) {
     return p[3] > 0 ? 'Slide up' : 'Slide down';
   }
   if (p[2] === 2) {
-    return p[3] > 0 ? 'Push to the back' : 'Pull to the front';
+    return p[3] > 0 ? 'Push back' : 'Pull front';
   }
   throw new Error('unknown');
 }
 
-function getBlockName(p) {
-  switch (p[1] % 4) {
+function getBlockName(piece) {
+  switch (piece % 4) {
     case 0: return 'top-left';
     case 1: return 'top-right';
     case 2: return 'bottom-right';
@@ -168,9 +174,9 @@ function getBlockName(p) {
   throw new Error('unknown');
 }
 
-function getFaceName(p) {
-  if (p[1] < 4) return 'front';
-  if (p[1] < 8) return 'left';
+function getFaceName(piece) {
+  if (piece < 4) return 'FRONT';
+  if (piece < 8) return 'LEFT';
   throw new Error('unknown');
 }
 
@@ -197,6 +203,32 @@ function findPath(initState, targetState) {
   let max = 100000;
   const allMoves = new Map();
 
+  function processMoves(state, dist, pieces) {
+    for (let j = 0; j < 3; ++j) {
+      for (let k = -1; k < 2; k += 2) {
+        const newState = [...state];
+        for (const i of pieces) {
+          if (state[i][j] > 7 || state[i][j] < -7) {
+            continue;
+          }
+          newState[i] = [...state[i]];
+          newState[i][j] += k;
+        }
+        if (hasIntersection(newState)) {
+          continue;
+        }
+        const newKey = getStateKey(newState);
+        const prevDist = distances.get(newKey);
+        if (prevDist <= dist + 1) {
+          continue;
+        }
+        distances.set(newKey, dist + 1);
+        prev.set(newKey, [key, pieces, j, k]);
+        queue.push(newState);
+      }
+    }
+  }
+
   while (queue.length > 0 && max > 0) {
     const state = queue.shift();
     key = getStateKey(state);
@@ -209,26 +241,14 @@ function findPath(initState, targetState) {
     const moves = [];
 
     for (let i = 0; i < PIECE_COUNT; ++i) {
-      for (let j = 0; j < 3; ++j) {
-        for (let k = -1; k < 2; k += 2) {
-          if (state[i][j] > 100 || state[i][j] < -100) {
-            continue;
+      processMoves(state, dist, [i]);
+      for (let j = i + 1; j < PIECE_COUNT; ++j) {
+        processMoves(state, dist, [i, j]);
+        for (let k = j + 1; k < PIECE_COUNT; ++k) {
+          processMoves(state, dist, [i, j, k]);
+          for (let l = k + 1; l < PIECE_COUNT; ++l) {
+            processMoves(state, dist, [i, j, k, l]);
           }
-          const newState = [...state];
-          newState[i] = [...state[i]];
-          newState[i][j] += k;
-          if (hasIntersection(newState)) {
-            continue;
-          }
-          moves.push([key, i, j, k]);
-          const newKey = getStateKey(newState);
-          const prevDist = distances.get(newKey);
-          if (prevDist <= dist + 1) {
-            continue;
-          }
-          distances.set(newKey, dist + 1);
-          prev.set(newKey, [key, i, j, k]);
-          queue.push(newState);
         }
       }
     }
