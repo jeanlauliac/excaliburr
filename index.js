@@ -95,20 +95,6 @@ const PIECES_FILL = [
 
 const PIECE_COUNT = PIECES_FILL.length;
 
-const INITIAL_STATE = [
-  [1, 3, 0],
-  [2, 2, 1],
-  [5, 3, -1],
-  [1, 1, 0],
-
-  [-2, 4, 3],
-  [0, 3, 1],
-  [0, 1, 1],
-  [-1, 1, 3],
-
-  [2, 0, 2],
-];
-
 const SORTED_STATE = [
   [1, 3, 0],
   [3, 4, 0],
@@ -126,20 +112,12 @@ const SORTED_STATE = [
 const graph = new Map();
 
 function main() {
-  const {path, allMoves, found} = findPath(INITIAL_STATE, SORTED_STATE);
-  if (path != null) {
-    console.log(found ? 'FOUND\n' : 'NOT found\n');
-    let i = 1;
-    for (const p of path) {
-      console.log(`${i}. ${getMoveDesc(p)}`);
-      ++i;
-    }
-  } else {
-    console.error('Not found, possible moves:\n');
-    for (const m of allMoves.get(getStateKey(INITIAL_STATE))) {
-      console.log(`  * ${getMoveDesc(m)}`);
-    }
-    process.exitCode = 1;
+  const {path, found} = findPath(SORTED_STATE);
+  console.log(found ? 'FOUND\n' : 'NOT found\n');
+  let i = 1;
+  for (const p of path) {
+    console.log(`${i}. ${getMoveDesc(p)}`);
+    ++i;
   }
 }
 
@@ -165,6 +143,7 @@ function getActionName(p) {
 }
 
 function getBlockName(piece) {
+  if (piece === 8) return 'sword';
   switch (piece % 4) {
     case 0: return 'top-left';
     case 1: return 'top-right';
@@ -177,31 +156,30 @@ function getBlockName(piece) {
 function getFaceName(piece) {
   if (piece < 4) return 'FRONT';
   if (piece < 8) return 'LEFT';
-  throw new Error('unknown');
+  return 'TOP';
 }
 
-function findPath(initState, targetState) {
+function findPath(initState) {
   let ntr = hasIntersection(initState);
   if (ntr) {
     throw new Error('invalid initial state');
   }
 
-  ntr = hasIntersection(targetState);
-  if (ntr) {
-    throw new Error('invalid target state');
-  }
+  // ntr = hasIntersection(targetState);
+  // if (ntr) {
+  //   throw new Error('invalid target state');
+  // }
 
   const distances = new Map();
   const prev = new Map();
 
   let key = getStateKey(initState);
-  const targetKey = getStateKey(targetState);
+  // const targetKey = getStateKey(targetState);
 
   distances.set(key, 0);
   const queue = [initState];
 
   let max = 100000;
-  const allMoves = new Map();
 
   function processMoves(state, dist, pieces) {
     for (let j = 0; j < 3; ++j) {
@@ -234,8 +212,8 @@ function findPath(initState, targetState) {
     key = getStateKey(state);
     const dist = distances.get(key);
 
-    if (key === targetKey) {
-      return {path: getPath(prev, key), allMoves, found: true};
+    if (state[8][1] >= 1) {
+      return {path: getPath(prev, key), found: true};
     }
 
     const moves = [];
@@ -252,7 +230,6 @@ function findPath(initState, targetState) {
         }
       }
     }
-    allMoves.set(key, moves);
     --max;
   }
 
@@ -262,7 +239,7 @@ function findPath(initState, targetState) {
 
   const sd = [...distances];
   sd.sort((a, b) => b[1] - a[1]);
-  return {path: getPath(prev, sd[0][0]), allMoves, found: false};
+  return {path: getPath(prev, sd[0][0]), found: false};
 }
 
 function getPath(prev, initKey) {
