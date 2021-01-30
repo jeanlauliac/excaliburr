@@ -272,10 +272,6 @@ function findPath(initState) {
     const node = nodes.get(key);
     const {state, distance} = node;
 
-    if (state[8][1] >= 1) {
-      return {path: getPath(nodes, key), found: true};
-    }
-
     for (let i = 0; i < PIECE_COUNT; ++i) {
       processMoves(key, node, [i]);
       for (let j = i + 1; j < PIECE_COUNT; ++j) {
