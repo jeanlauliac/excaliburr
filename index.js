@@ -114,51 +114,81 @@ const SORTED_STATE = [
 ];
 
 function main() {
-  const {path, found} = findPath(SORTED_STATE);
-  console.log(found ? 'FOUND\n' : 'NOT found\n');
-  let i = 1;
-  for (const p of path) {
-    console.log(`${i}. ${getMoveDesc(p)}`);
-    ++i;
+  const nodes = findPath(SORTED_STATE);
+  // console.log(found ? 'FOUND\n' : 'NOT found\n');
+  // let i = 1;
+  // for (const p of path) {
+  //   console.log(`${i}. ${getMoveDesc(p)}`);
+  //   ++i;
+  // }
+  const terminalNodeKeys = new Set([...nodes.keys()]); 
+  for (const node of nodes.values()) {
+    if (node.predecessor != null) {
+      terminalNodeKeys.delete(node.predecessor.key);
+    }
   }
+
+  const interestingNodeKeys = new Set();
+  for (let nodeKey of terminalNodeKeys) {
+    interestingNodeKeys.add(nodeKey);
+    let node;
+    while ((node = nodes.get(nodeKey)).predecessor != null) {
+      interestingNodeKeys.add(node.predecessor.key);
+      nodeKey = node.predecessor.key;
+    }
+  }
+  const ids = new Map([...interestingNodeKeys].map((key, idx) => [key, idx]));
+
+  console.log('digraph excaliburr {');
+  for (const nodeKey of interestingNodeKeys) {
+    const node = nodes.get(nodeKey);
+    if (node.predecessor != null) {
+      const predID = ids.get(node.predecessor.key);
+      const tID = ids.get(nodeKey);
+      const label = getMoveDesc(node.predecessor);
+
+      console.log(`${predID} -> ${tID} [ label = ${JSON.stringify(label)} ];`);
+    }
+  }
+  console.log('}');
 }
 
 function getMoveDesc(p) {
-  return `${getActionName(p)}: ${p[1].map(piece => getPieceName(piece)).join(', ')}`;
+  return `${getActionName(p)}: ${p.pieces.map(piece => getPieceName(piece)).join(', ')}`;
 }
 
 function getPieceName(piece) {
-  return `${getFaceName(piece)} ${getBlockName(piece)}`;
+  if (piece === 8) return 'sword';
+  return `${getFaceName(piece)}${getBlockName(piece)}`;
 }
 
 function getActionName(p) {
-  if (p[2] === 0) {
-    return p[3] > 0 ? 'Shift right' : 'Shift left';
+  if (p.axis === 0) {
+    return p.move > 0 ? 'right' : 'left';
   }
-  if (p[2] === 1) {
-    return p[3] > 0 ? 'Slide up' : 'Slide down';
+  if (p.axis === 1) {
+    return p.move > 0 ? 'up' : 'down';
   }
-  if (p[2] === 2) {
-    return p[3] > 0 ? 'Push back' : 'Pull front';
+  if (p.axis === 2) {
+    return p.move > 0 ? 'back' : 'front';
   }
   throw new Error('unknown');
 }
 
 function getBlockName(piece) {
-  if (piece === 8) return 'sword';
   switch (piece % 4) {
-    case 0: return 'top-left';
-    case 1: return 'top-right';
-    case 2: return 'bottom-right';
-    case 3: return 'bottom-left';
+    case 0: return 'tl';
+    case 1: return 'tr';
+    case 2: return 'br';
+    case 3: return 'bl';
   }
   throw new Error('unknown');
 }
 
 function getFaceName(piece) {
-  if (piece < 4) return 'FRONT';
-  if (piece < 8) return 'LEFT';
-  return 'TOP';
+  if (piece < 4) return 'F';
+  if (piece < 8) return 'L';
+  throw new Error('unknown');
 }
 
 function findPath(initState) {
@@ -172,32 +202,35 @@ function findPath(initState) {
   //   throw new Error('invalid target state');
   // }
 
-  const distances = new Map();
-  const prev = new Map();
+  const nodes = new Map();
   const invalidKeys = new Set();
 
-  let key = getStateKey(initState);
+  let initKey = getStateKey(initState);
   // const targetKey = getStateKey(targetState);
 
-  distances.set(key, 0);
-  const queue = [initState];
+  nodes.set(initKey, {
+    state: initState,
+    distance: 0,
+    predecessor: undefined,
+  });
+  const queue = [initKey];
 
-  let max = 100;
+  let max = 20;
   let newState = [...initState];
 
-  function processMoves(state, dist, pieces) {
-    for (let j = 0; j < 3; ++j) {
-      for (let k = -1; k < 2; k += 2) {
+  function processMoves(key, state, dist, pieces) {
+    for (let axis = 0; axis < 3; ++axis) {
+      for (let move = -1; move < 2; move += 2) {
         for (let pieceIdx = 0; pieceIdx < state.length; ++pieceIdx) {
           newState[pieceIdx] = state[pieceIdx];
         }
 
         for (const i of pieces) {
-          if (state[i][j] > 7 || state[i][j] < -7) {
+          if (state[i][axis] > 7 || state[i][axis] < -7) {
             continue;
           }
           newState[i] = [...state[i]];
-          newState[i][j] += k;
+          newState[i][axis] += move;
         }
 
         const newKey = getStateKey(newState);
@@ -213,37 +246,40 @@ function findPath(initState) {
         }
 
         // We have found a new valid position
-        const prevDist = distances.get(newKey);
+        const existingNode = nodes.get(newKey);
 
         // If the existing known path to that position
-        // is shorter than the one find, don't bother.
-        if (prevDist <= dist + 1) {
+        // is shorter or same than the one just found, don't bother.
+        if (existingNode != null && existingNode.distance <= dist + 1) {
           continue;
         }
-        distances.set(newKey, dist + 1);
-        prev.set(newKey, [key, pieces, j, k]);
-        queue.push([...newState]);
+        nodes.set(newKey, {
+          state: [...newState],
+          distance: dist + 1,
+          predecessor: {key, pieces, axis, move}, 
+        });
+        queue.push(newKey);
       }
     }
   }
 
   while (queue.length > 0 && max > 0) {
-    const state = queue.shift();
-    key = getStateKey(state);
-    const dist = distances.get(key);
+    const key = queue.shift();
+    const node = nodes.get(key);
+    const {state, distance} = node;
 
     if (state[8][1] >= 1) {
-      return {path: getPath(prev, key), found: true};
+      return {path: getPath(nodes, key), found: true};
     }
 
     for (let i = 0; i < PIECE_COUNT; ++i) {
-      processMoves(state, dist, [i]);
+      processMoves(key, state, distance, [i]);
       for (let j = i + 1; j < PIECE_COUNT; ++j) {
-        processMoves(state, dist, [i, j]);
+        processMoves(key, state, distance, [i, j]);
         for (let k = j + 1; k < PIECE_COUNT; ++k) {
-          processMoves(state, dist, [i, j, k]);
+          processMoves(key, state, distance, [i, j, k]);
           for (let l = k + 1; l < PIECE_COUNT; ++l) {
-            processMoves(state, dist, [i, j, k, l]);
+            processMoves(key, state, distance, [i, j, k, l]);
           }
         }
       }
@@ -255,18 +291,23 @@ function findPath(initState) {
     console.error(`${max} tries left`);
   }
 
-  const sd = [...distances];
-  sd.sort((a, b) => b[1] - a[1]);
-  return {path: getPath(prev, sd[0][0]), found: false};
+  return nodes;
+  // const sd = [...nodes].map(([key, node]) => [key, node.distance]);
+  // sd.sort((a, b) => b[1] - a[1]);
+
+  // const paths = [];
+  // for (let solutionIdx = 0; solutionIdx < sd.length && solutionIdx < 10; ++solutionIdx)
+  // {
+  //    {path: getPath(nodes, sd[solutionIdx][0]), found: false};
+  // }
 }
 
-function getPath(prev, initKey) {
+function getPath(nodes, targetKey) {
   const path = [];
-  let p = prev.get(initKey);
-  while (p != null) {
-    path.push(p);
-    initKey = p[0];
-    p = prev.get(initKey);
+  let p = nodes.get(targetKey);
+  while (p.predecessor != null) {
+    path.push(p.predecessor);
+    p = nodes.get(p.predecessor.key);
   }
   return path.reverse();
 }
