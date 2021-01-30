@@ -121,12 +121,7 @@ function main() {
   //   console.log(`${i}. ${getMoveDesc(p)}`);
   //   ++i;
   // }
-  const terminalNodeKeys = new Set([...nodes.keys()]); 
-  for (const node of nodes.values()) {
-    if (node.predecessor != null) {
-      terminalNodeKeys.delete(node.predecessor.key);
-    }
-  }
+  const terminalNodeKeys = new Set([...nodes].filter(([key, node]) => node.terminal).map(([key]) => key)); 
 
   const interestingNodeKeys = new Set();
   for (let nodeKey of terminalNodeKeys) {
@@ -140,6 +135,9 @@ function main() {
   const ids = new Map([...interestingNodeKeys].map((key, idx) => [key, idx]));
 
   console.log('digraph excaliburr {');
+  console.log('rankdir="LR";');
+  console.log('');
+
   for (const nodeKey of interestingNodeKeys) {
     const node = nodes.get(nodeKey);
     if (node.predecessor != null) {
@@ -212,13 +210,16 @@ function findPath(initState) {
     state: initState,
     distance: 0,
     predecessor: undefined,
+    terminal: true,
   });
   const queue = [initKey];
 
-  let max = 20;
+  let max = 1000;
   let newState = [...initState];
 
-  function processMoves(key, state, dist, pieces) {
+  function processMoves(key, node, pieces) {
+    const {state, distance} = node;
+
     for (let axis = 0; axis < 3; ++axis) {
       for (let move = -1; move < 2; move += 2) {
         for (let pieceIdx = 0; pieceIdx < state.length; ++pieceIdx) {
@@ -245,18 +246,21 @@ function findPath(initState) {
           continue;
         }
 
+        node.terminal = false;
+
         // We have found a new valid position
         const existingNode = nodes.get(newKey);
 
         // If the existing known path to that position
         // is shorter or same than the one just found, don't bother.
-        if (existingNode != null && existingNode.distance <= dist + 1) {
+        if (existingNode != null && existingNode.distance <= distance + 1) {
           continue;
         }
         nodes.set(newKey, {
           state: [...newState],
-          distance: dist + 1,
-          predecessor: {key, pieces, axis, move}, 
+          distance: distance + 1,
+          predecessor: {key, pieces, axis, move},
+          terminal: existingNode != null ? existingNode.terminal : true,
         });
         queue.push(newKey);
       }
@@ -273,13 +277,13 @@ function findPath(initState) {
     }
 
     for (let i = 0; i < PIECE_COUNT; ++i) {
-      processMoves(key, state, distance, [i]);
+      processMoves(key, node, [i]);
       for (let j = i + 1; j < PIECE_COUNT; ++j) {
-        processMoves(key, state, distance, [i, j]);
+        processMoves(key, node, [i, j]);
         for (let k = j + 1; k < PIECE_COUNT; ++k) {
-          processMoves(key, state, distance, [i, j, k]);
+          processMoves(key, node, [i, j, k]);
           for (let l = k + 1; l < PIECE_COUNT; ++l) {
-            processMoves(key, state, distance, [i, j, k, l]);
+            processMoves(key, node, [i, j, k, l]);
           }
         }
       }
