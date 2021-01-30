@@ -2,13 +2,17 @@
 
 const util = require('util');
 
-// Pieces 0..3 are on front face, clockwise.
-// Pieces 4..7 are left, clockwise.
+// Front is where the little white spot is, on the pommel
+// (on my copy of it, anyway).
+//
+// Pieces 0..3 are on front face, clockwise. 0 is top-left piece.
+// Pieces 4..7 are seen from left face, clockwise.
 // Piece 8 is the sword.
 //
 // Axis X is going right, axis Y is going up, axis Z is going back. Global
-// [0,0,0] is in the bottom-left corner of the cube seen from the front. Pieces
-// are expressed in local coordinates.
+// [0,0,0] is in the bottom-left corner of the cube seen from the front. Piece
+// fills are described in local coordinates, [0,0,0] is the bottom-left corner of each piece
+// as seen from either the front of the left.
 const PIECES_FILL = [
   [
     [0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0], [0, 2, 0], [1, 2, 0],
@@ -109,8 +113,6 @@ const SORTED_STATE = [
   [2, 0, 2],
 ];
 
-const graph = new Map();
-
 function main() {
   const {path, found} = findPath(SORTED_STATE);
   console.log(found ? 'FOUND\n' : 'NOT found\n');
@@ -172,6 +174,7 @@ function findPath(initState) {
 
   const distances = new Map();
   const prev = new Map();
+  const invalidKeys = new Set();
 
   let key = getStateKey(initState);
   // const targetKey = getStateKey(targetState);
@@ -179,12 +182,16 @@ function findPath(initState) {
   distances.set(key, 0);
   const queue = [initState];
 
-  let max = 100000;
+  let max = 100;
+  let newState = [...initState];
 
   function processMoves(state, dist, pieces) {
     for (let j = 0; j < 3; ++j) {
       for (let k = -1; k < 2; k += 2) {
-        const newState = [...state];
+        for (let pieceIdx = 0; pieceIdx < state.length; ++pieceIdx) {
+          newState[pieceIdx] = state[pieceIdx];
+        }
+
         for (const i of pieces) {
           if (state[i][j] > 7 || state[i][j] < -7) {
             continue;
@@ -192,17 +199,30 @@ function findPath(initState) {
           newState[i] = [...state[i]];
           newState[i][j] += k;
         }
-        if (hasIntersection(newState)) {
+
+        const newKey = getStateKey(newState);
+        if (invalidKeys.has(newKey) ) {
+          // Never mind.
           continue;
         }
-        const newKey = getStateKey(newState);
+
+        if (hasIntersection(newState)) {
+          // Remember so we don't spend time on it later again.
+          invalidKeys.add(newKey);
+          continue;
+        }
+
+        // We have found a new valid position
         const prevDist = distances.get(newKey);
+
+        // If the existing known path to that position
+        // is shorter than the one find, don't bother.
         if (prevDist <= dist + 1) {
           continue;
         }
         distances.set(newKey, dist + 1);
         prev.set(newKey, [key, pieces, j, k]);
-        queue.push(newState);
+        queue.push([...newState]);
       }
     }
   }
@@ -215,8 +235,6 @@ function findPath(initState) {
     if (state[8][1] >= 1) {
       return {path: getPath(prev, key), found: true};
     }
-
-    const moves = [];
 
     for (let i = 0; i < PIECE_COUNT; ++i) {
       processMoves(state, dist, [i]);
